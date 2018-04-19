@@ -25,17 +25,22 @@ find_path(LIBCTRU_INCLUDE_DIR 3ds.h
 find_library(LIBCTRU_LIBRARY NAMES ctru libctru.a
           PATHS ${CTRULIB_PATHS}
           PATH_SUFFIXES lib libctru/lib )
+find_library(LIBCITRO3D_LIBRARY NAMES citro3d libcitro3d.a
+    PATHS ${CTRULIB_PATHS}
+    PATH_SUFFIXES lib libctru/lib)
 
-set(LIBCTRU_LIBRARIES ${LIBCTRU_LIBRARY} )
-set(LIBCTRU_INCLUDE_DIRS ${LIBCTRU_INCLUDE_DIR} )
+set(LIBCTRU_LIBRARIES ${LIBCTRU_LIBRARY} ${LIBCITRO3D_LIBRARY})
+set(LIBCTRU_INCLUDE_DIRS ${LIBCTRU_INCLUDE_DIR})
 
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set LIBCTRU_FOUND to TRUE
 # if all listed variables are TRUE
 find_package_handle_standard_args(CTRULIB  DEFAULT_MSG
                                   LIBCTRU_LIBRARY LIBCTRU_INCLUDE_DIR)
+find_package_handle_standard_args(CTRULIB  DEFAULT_MSG
+    LIBCITRO3D_LIBRARY LIBCTRU_INCLUDE_DIR)
 
-mark_as_advanced(LIBCTRU_INCLUDE_DIR LIBCTRU_LIBRARY )
+mark_as_advanced(LIBCTRU_INCLUDE_DIR LIBCTRU_LIBRARY LIBCITRO3D_LIBRARY)
 if(CTRULIB_FOUND)
     set(CTRULIB ${LIBCTRU_INCLUDE_DIR}/..)
     message(STATUS "setting CTRULIB to ${CTRULIB}")
@@ -45,4 +50,9 @@ if(CTRULIB_FOUND)
         IMPORTED_LOCATION "${LIBCTRU_LIBRARY}"
         INTERFACE_INCLUDE_DIRECTORIES "${LIBCTRU_INCLUDE_DIR}"
     )
+    add_library(3ds::libcitro3d STATIC IMPORTED GLOBAL)
+    set_target_properties(3ds::libcitro3d PROPERTIES
+        IMPORTED_LOCATION "${LIBCITRO3D_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${LIBCTRU_INCLUDE_DIR}"
+        )
 endif()
