@@ -1,0 +1,8 @@
+if(NOT GXTEXCONV)
+    find_program(GXTEXCONV gxtexconv)
+    if(GXTEXCONV)
+        message(STATUS "gxtexconv: ${GXTEXCONV} - found")
+    else()
+        message(FATAL_ERROR "gxtexconv - not found")
+    endif()
+endif()

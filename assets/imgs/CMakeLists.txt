@@ -3,12 +3,21 @@ set(SrcFiles
     launcher_image.png)
 
 include(Tools)
+if(WII)
+    include(ToolsWii)
+endif()
 
 foreach(SrcFile ${SrcFiles}) 
     get_filename_component(SrcFileFull ${SrcFile} ABSOLUTE)
     set(DstFile ${CMAKE_CURRENT_BINARY_DIR}/${SrcFile})
-
-    if(NOT PNGCRUSH)
+    if(WII)
+        set(DstFile ${DstFile}.tpl)
+        add_custom_command(
+            OUTPUT ${DstFile}
+            COMMAND ${GXTEXCONV} -i ${SrcFileFull} -o ${DstFile}
+            DEPENDS ${SrcFile}
+            )
+    elseif(NOT PNGCRUSH)
         add_custom_command(
             OUTPUT ${DstFile}
             COMMAND cp ${SrcFileFull} ${DstFile}
