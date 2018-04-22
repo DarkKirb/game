@@ -22,17 +22,25 @@ find_path(LIBOGC_INCLUDE_DIR gccore.h
           PATHS ${LIBOGC_PATHS}
           PATH_SUFFIXES include libogc/include ogc/include )
 
-find_library(LIBCTRU_LIBRARY NAMES ctru libogc.a
+find_library(LIBOGC_LIBRARY NAMES libogc libogc.a
           PATHS ${LIBOGC_PATHS}
-          PATH_SUFFIXES lib libctru/lib )
+          PATH_SUFFIXES lib lib/wii )
 
-set(LIBOGC_LIBRARIES ${LIBOGC_LIBRARY} )
+find_library(LIBWIIUSE_LIBRARY NAMES libwiiuse libwiiuse.a
+    PATHS ${LIBOGC_PATHS}
+    PATH_SUFFIXES lib lib/wii)
+
+find_library(LIBBTE_LIBRARY NAMES libbte libbte.a
+    PATHS ${LIBOGC_PATHS}
+    PATH_SUFFIXES lib lib/wii)
+
+set(LIBOGC_LIBRARIES ${LIBWIIUSE_LIBRARY} ${LIBBTE_LIBRARY} ${LIBOGC_LIBRARY} )
 set(LIBOGC_INCLUDE_DIRS ${LIBOGC_INCLUDE_DIR} )
 
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set LIBCTRU_FOUND to TRUE
 # if all listed variables are TRUE
-find_package_handle_standard_args(LIBOG  DEFAULT_MSG
+find_package_handle_standard_args(LIBOGC DEFAULT_MSG
     LIBOGC_LIBRARY LIBOGC_INCLUDE_DIR)
 
 mark_as_advanced(LIBOGC_INCLUDE_DIR LIBOGC_LIBRARY )
