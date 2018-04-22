@@ -18,10 +18,11 @@ struct VBO {
     bool changed;
     Triangle get(int index) const;
     void set(int index, Triangle item);
+    void *native;
 };
 
 struct GPU {
-    std::vector<VBO> VBOs;
+    std::vector<VBO*> VBOs;
     GPU();
     ~GPU();
     void startRender();
