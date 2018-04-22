@@ -20,9 +20,9 @@ foreach(SrcFile ${SrcFiles})
             COMMAND ${PNGCRUSH} ${SrcFileFull} ${DstFile}
             DEPENDS ${SrcFile}
             )
-        makeTargetDirs(${DstFile})
-        list(APPEND DstFiles ${DstFile})
     endif()
+    makeTargetDirs(${DstFile})
+    list(APPEND DstFiles ${DstFile})
 endforeach()
 
 add_custom_target(Images ALL DEPENDS ${DstFiles})
