@@ -35,21 +35,26 @@ else()
     find_package(GLEW REQUIRED)
     include_directories(${GLEW_INCLUDE_DIRS})
 endif()
+find_package(ZLIB REQUIRED)
+include_directories(${ZLIB_INCLUDE_DIRS})
+find_package(PNG REQUIRED)
+include_directories(${PNG_INCLUDE_DIRS})
 
 find_package(PythonInterp 3 REQUIRED)
 
 add_executable(${APP_TARGET} ${SRCS})
 
 if(3DS)
-    target_link_libraries(${APP_TARGET} ${LIBCTRU_LIBRARIES})
+    target_link_libraries(${APP_TARGET} ${LIBCTRU_LIBRARIES} ${PNG_LIBRARIES} ${ZLIB_LIBRARIES})
     include(Tools3DS)
     add_cia_target(${APP_TARGET} ${PROJECT_SOURCE_DIR}/assets/game.rsf ${PROJECT_SOURCE_DIR}/assets/imgs/launcher_image.png ${PROJECT_SOURCE_DIR}/assets/audio/banner.wav
                     game "example game" "Dark Kirb" ${PROJECT_SOURCE_DIR}/assets/imgs/launcher_icon.png)
 elseif(WII)
-    target_link_libraries(${APP_TARGET} ${LIBOGC_LIBRARIES})
+    target_link_libraries(${APP_TARGET} ${LIBOGC_LIBRARIES} ${PNG_LIBRARIES} ${ZLIB_LIBRARIES})
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lm")
 else()
-    target_link_libraries(${APP_TARGET} glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
+    target_link_libraries(${APP_TARGET} glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${PNG_LIBRARIES} ${ZLIB_LIBRARIES})
 endif()
+
 
 add_subdirectory(assets)
