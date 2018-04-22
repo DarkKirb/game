@@ -2,12 +2,17 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <vector>
+#include <string>
 
 namespace {
 GLFWwindow *window;
+std::vector<std::string> args;
 }
 
-void init() {
+void init(int argc, const char** argv) {
+    for(int i = 0; i < argc; i++)
+        args.push_back(argv[i]);
     if(!glfwInit())
         throw "GLFW could not be initialized";
     glfwSetErrorCallback([](int error, const char* description) {
@@ -33,4 +38,8 @@ void swapFB() {
 void deinit() {
     glfwDestroyWindow(window);
     glfwTerminate();
+}
+
+std::vector<std::string> &getArgs() {
+    return args;
 }

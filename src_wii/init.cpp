@@ -3,11 +3,13 @@
 #include <gccore.h>
 #include <wiiuse/wpad.h>
 #include <ogc/pad.h>
+#include <fat.h>
+#include <iostream>
 
 static void *xfb = nullptr;
 static GXRModeObj *rmode = nullptr;
 
-void init() {
+void init(int argc, const char** argv) {
     VIDEO_Init();
     WPAD_Init();
     PAD_Init();
@@ -20,6 +22,11 @@ void init() {
     VIDEO_Flush();
     VIDEO_WaitVSync();
     if(rmode->viTVMode&VI_NON_INTERLACE) VIDEO_WaitVSync();
+
+    if(!fatInitDefault()) {
+        std::cerr << "fatInitDefault failure: terminating" << std::endl;
+        abort();
+    }
 }
 bool processEvents() {
     WPAD_ScanPads();

@@ -44,7 +44,7 @@ if(3DS)
     target_link_libraries(${APP_TARGET} ${LIBCTRU_LIBRARIES})
     include(Tools3DS)
     add_cia_target(${APP_TARGET} ${PROJECT_SOURCE_DIR}/assets/game.rsf ${PROJECT_SOURCE_DIR}/assets/imgs/launcher_image.png ${PROJECT_SOURCE_DIR}/assets/audio/banner.wav
-                   APP_TITLE game APP_DESCRIPTION "example game" APP_AUTHOR "Dark Kirb" APP_ICON ${PROJECT_SOURCE_DIR}/assets/imgs/launcher_icon.png)
+                    game "example game" "Dark Kirb" ${PROJECT_SOURCE_DIR}/assets/imgs/launcher_icon.png)
 elseif(WII)
     target_link_libraries(${APP_TARGET} ${LIBOGC_LIBRARIES})
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lm")
