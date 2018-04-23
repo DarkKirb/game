@@ -1,6 +1,7 @@
 set(SrcFiles
     launcher_icon.png
-    launcher_image.png)
+    launcher_image.png
+    gorb.png)
 
 include(Tools)
 if(WII)

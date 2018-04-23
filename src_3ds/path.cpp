@@ -48,7 +48,7 @@ std::string get_executable_dir() {
 }
 
 std::string get_ro_data_dir() {
-    return "romfs:/";
+    return "romfs:";
 }
 
 std::string get_rw_data_dir() {

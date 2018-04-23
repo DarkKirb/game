@@ -22,10 +22,10 @@ find_path(LIBCTRU_INCLUDE_DIR 3ds.h
           PATHS ${CTRULIB_PATHS}
           PATH_SUFFIXES include libctru/include )
 
-find_library(LIBCTRU_LIBRARY NAMES ctru libctru.a
+find_library(LIBCTRU_LIBRARY NAMES ctrud libctrud.a
           PATHS ${CTRULIB_PATHS}
           PATH_SUFFIXES lib libctru/lib )
-find_library(LIBCITRO3D_LIBRARY NAMES citro3d libcitro3d.a
+find_library(LIBCITRO3D_LIBRARY NAMES citro3dd libcitro3dd.a
     PATHS ${CTRULIB_PATHS}
     PATH_SUFFIXES lib libctru/lib)
 

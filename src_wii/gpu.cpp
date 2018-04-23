@@ -55,7 +55,7 @@ GPU::GPU() {
 
 	GX_InvalidateTexAll();
     
-    guOrtho(perspective,0,479,0,639,0,300);
+    guOrtho(perspective,-1,2,-1,2,-1,2);
     GX_LoadProjectionMtx(perspective, GX_ORTHOGRAPHIC);
 }
 GPU::~GPU() {}
@@ -101,16 +101,25 @@ void GPU::destroyVBO(VBO *vbo) {
 }
 
 void VBO::render(int from, int len) {
-    GX_Begin(GX_TRIANGLES, GX_VTXFMT0, len*3);
-        for(int i = from; i < from + len; i++) {
+    for(int i = from; i < from + len; i++) {
+        GX_Begin(GX_TRIANGLES, GX_VTXFMT0, 3);
             GX_Position2f32(tris[i].a.pos.x, tris[i].a.pos.y);
             GX_TexCoord2f32(tris[i].a.texcoords.x, tris[i].a.texcoords.y);
-            GX_Position2f32(tris[i].b.pos.x, tris[i].b.pos.y);
-            GX_TexCoord2f32(tris[i].b.texcoords.x, tris[i].b.texcoords.y);
             GX_Position2f32(tris[i].c.pos.x, tris[i].c.pos.y);
             GX_TexCoord2f32(tris[i].c.texcoords.x, tris[i].c.texcoords.y);
-        }
-    GX_End();
+            GX_Position2f32(tris[i].b.pos.x, tris[i].b.pos.y);
+            GX_TexCoord2f32(tris[i].b.texcoords.x, tris[i].b.texcoords.y);
+        GX_End();
+        GX_Begin(GX_TRIANGLES, GX_VTXFMT0, 3);
+            GX_Position2f32(tris[i].c.pos.x, tris[i].c.pos.y);
+            GX_TexCoord2f32(tris[i].c.texcoords.x, tris[i].c.texcoords.y);
+            GX_Position2f32(tris[i].b.pos.x, tris[i].b.pos.y);
+            GX_TexCoord2f32(tris[i].b.texcoords.x, tris[i].b.texcoords.y);
+            GX_Position2f32(tris[i].a.pos.x, tris[i].a.pos.y);
+            GX_TexCoord2f32(tris[i].a.texcoords.x, tris[i].a.texcoords.y);
+        GX_End();
+
+    }
 }
 Triangle VBO::get(int index) const {
     return tris[index];
@@ -123,6 +132,7 @@ struct TEXNative {
     GXTexObj texobj;
 };
 void *GPU::load_texture(std::string tex) {
+    tex += ".tpl";
     auto native = new TEXNative;
     TPLFile &spriteTPL = native->spriteTPL;
     GXTexObj &texobj = native->texobj;

@@ -12,10 +12,12 @@
 #include <malloc.h>
 #include <math.h>
 #include <ogc/tpl.h>
+#include <debug.h>
 
 #define DEFAULT_FIFO_SIZE (256*1024)
 namespace {
 GXRModeObj *rmode = nullptr;
+bool first = true;
 }
 void *xfbs[2];
 bool framebuffer;
@@ -23,6 +25,8 @@ GXRModeObj *get_rmode() {
     return rmode;
 }
 void init(int argc, const char** argv) {
+    DEBUG_Init(GDBSTUB_DEVICE_USB, 1);
+    _break();
     VIDEO_Init();
     WPAD_Init();
     PAD_Init();
@@ -35,7 +39,7 @@ void init(int argc, const char** argv) {
     VIDEO_Flush();
     VIDEO_WaitVSync();
     if(rmode->viTVMode&VI_NON_INTERLACE) VIDEO_WaitVSync();
-    framebuffer++;
+    framebuffer = !framebuffer;
 
     if(!fatInitDefault()) {
         std::cerr << "fatInitDefault failure: terminating" << std::endl;
@@ -58,10 +62,13 @@ bool processEvents() {
 }
 void swapFB() {
     VIDEO_SetNextFramebuffer(xfbs[framebuffer]);
-    VIDEO_SetBlack(false);
+    if(__builtin_expect(first, 0)) {
+        VIDEO_SetBlack(false);
+        first = false;
+    }
     VIDEO_Flush();
     VIDEO_WaitVSync();
-    framebuffer++;
+    framebuffer = !framebuffer;
 }
 void deinit() {
 }

@@ -215,7 +215,7 @@ void VBO::set(int index, Triangle item) {
 
 void *GPU::load_texture(std::string tex) {
     PNG png(tex);
-    char *raw_png = new char[png.height * png.width];
+    char *raw_png = new char[png.height * png.width * 4];
     char *gpusrc = (char *)linearAlloc(png.height * png.width * 4);
     memcpy(gpusrc, raw_png, png.height * png.width * 4);
     GSPGPU_FlushDataCache(gpusrc, png.width*png.height*4);

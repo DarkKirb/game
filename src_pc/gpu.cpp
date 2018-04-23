@@ -2,6 +2,7 @@
 #include <GL/glew.h>
 #include <algorithm>
 #include <png.hpp>
+#include <iostream>
 namespace {
     const char* vertex_shader = R"(
 #version 120
@@ -9,29 +10,59 @@ attribute vec2 coord2d;
 attribute vec2 texcoord;
 varying vec2 f_texcoord;
 void main() {
-    gl_Position = coord2d;
+    gl_Position = vec4(coord2d, 0.0, 1.0);
     f_texcoord = texcoord;
 }
         )";
     const char* fragment_shader = R"(
 #version 120
 varying vec2 f_texcoord;
-uniform Sampler2D tex;
+uniform sampler2D tex;
 void main() {
-    gl_FragColor = texture(tex, f_texcoord);
+    gl_FragColor = texture2D(tex, f_texcoord);
 }
     )";
     GLuint vshader, fshader, program, coord2d, texcoord, tex;
 }
 
 GPU::GPU() {
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void *) {
+            std::cout << "source: " << source << ", type: " << type << ", id: " << id << ", severity: " << severity << ", length: " << length << ", message: " << message << std::endl;
+            }, nullptr);
     vshader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vshader, 1, &vertex_shader, nullptr);
     glCompileShader(vshader);
 
+    GLint compile_ok;
+    glGetShaderiv(vshader, GL_COMPILE_STATUS, &compile_ok);
+	if (!compile_ok) {
+        std::cout << "Error in vertex shader" << std::endl;
+        GLint log_length = 0;
+        glGetShaderiv(vshader, GL_INFO_LOG_LENGTH, &log_length);
+        char *log = new char[log_length];
+        glGetShaderInfoLog(vshader, log_length, NULL, log);
+        std::cout << log << std::endl;
+        delete[] log;
+        throw nullptr;
+	}
+
     fshader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fshader, 1, &fragment_shader, nullptr);
     glCompileShader(fshader);
+
+
+    glGetShaderiv(fshader, GL_COMPILE_STATUS, &compile_ok);
+	if (!compile_ok) {
+        std::cout << "Error in fragment shader" << std::endl;
+        GLint log_length = 0;
+        glGetShaderiv(fshader, GL_INFO_LOG_LENGTH, &log_length);
+        char *log = new char[log_length];
+        glGetShaderInfoLog(fshader, log_length, NULL, log);
+        std::cout << log << std::endl;
+        delete[] log;
+        throw nullptr;
+	}
 
     program = glCreateProgram();
 	glAttachShader(program, vshader);
@@ -123,7 +154,7 @@ void VBO::set(int index, Triangle item) {
 
 void *GPU::load_texture(std::string tex) {
     PNG png(tex);
-    char *raw_png = new char[png.height * png.width];
+    char *raw_png = new char[png.height * png.width * 4];
     png.read_to(raw_png);
     GLuint *tex_id = new GLuint;
     glGenTextures(1, tex_id);
