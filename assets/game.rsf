@@ -4,7 +4,7 @@ BasicInfo:
   Logo                    : Homebrew
 
 RomFs:
-  RootPath: assets/
+  RootPath: build/assets/
 
 TitleInfo:
   Category                : Application

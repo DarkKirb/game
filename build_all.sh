@@ -14,4 +14,4 @@ mv game.cia ../out
 rm -rf *
 cmake -DCMAKE_TOOLCHAIN_FILE=../DevkitPpcWii.cmake ..
 make
-mv game ../out/game.elf
+mv game.dol ../out
