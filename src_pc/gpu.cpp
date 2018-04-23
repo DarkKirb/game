@@ -1,6 +1,7 @@
 #include <gpu.hpp>
 #include <GL/glew.h>
 #include <algorithm>
+#include <png.hpp>
 namespace {
     const char* vertex_shader = R"(
 #version 120
@@ -118,4 +119,39 @@ Triangle VBO::get(int index) const {
 void VBO::set(int index, Triangle item) {
     tris[index] = item;
     changed = true;
+}
+
+void *GPU::load_texture(std::string tex) {
+    PNG png(tex);
+    char *raw_png = new char[png.height * png.width];
+    png.read_to(raw_png);
+    GLuint *tex_id = new GLuint;
+    glGenTextures(1, tex_id);
+    glBindTexture(GL_TEXTURE_2D, *tex_id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D,
+            0,
+            GL_RGBA,
+            png.width,
+            png.height,
+            0,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            raw_png
+            );
+    delete[] raw_png;
+    return tex_id;
+}
+
+void GPU::destroy_texture(void *p) {
+    GLuint *tex_id = (GLuint*)p;
+    glDeleteTextures(1, tex_id);
+    delete tex_id;
+}
+
+void GPU::use_texture(void *p) {
+    GLuint *tex_id = (GLuint*)p;
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(tex, 0);
+    glBindTexture(GL_TEXTURE_2D, *tex_id);
 }

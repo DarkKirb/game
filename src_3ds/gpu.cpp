@@ -6,12 +6,18 @@
 #include <iostream>
 #include <iterator>
 #include <algorithm>
+#include <png.hpp>
 
 #define CLEAR_COLOR 0x68B0D8FF
 #define DISPLAY_TRANSFER_FLAGS \
 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
 GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
+
+#define TEXTURE_TRANSFER_FLAGS \
+	(GX_TRANSFER_FLIP_VERT(1) | GX_TRANSFER_OUT_TILED(1) | GX_TRANSFER_RAW_COPY(0) | \
+	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGBA8) | \
+	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 namespace {
 constexpr int tri_max = 1024;
 static_assert(tri_max % 8 == 0, "Triangle maximum has to be a multiple of 8");
@@ -59,6 +65,7 @@ GPU::GPU() {
     C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, 0, 0);
     C3D_TexEnvOp(env, C3D_Both, 0, 0, 0);
     C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
+    C3D_DepthTest(true, GPU_GEQUAL, GPU_WRITE_ALL);
 
     memset(bitmap, 0xFF, sizeof(bitmap));
 }
@@ -204,4 +211,27 @@ Triangle VBO::get(int index) const {
 void VBO::set(int index, Triangle item) {
     tris[index] = item;
     changed = true;
+}
+
+void *GPU::load_texture(std::string tex) {
+    PNG png(tex);
+    char *raw_png = new char[png.height * png.width];
+    char *gpusrc = (char *)linearAlloc(png.height * png.width * 4);
+    memcpy(gpusrc, raw_png, png.height * png.width * 4);
+    GSPGPU_FlushDataCache(gpusrc, png.width*png.height*4);
+    C3D_Tex *texp = new C3D_Tex;
+    C3D_TexInit(texp, png.width, png.height, GPU_RGBA8);
+    C3D_SafeDisplayTransfer((u32*)gpusrc, GX_BUFFER_DIM(png.width, png.height), (u32*)texp->data, GX_BUFFER_DIM(png.width, png.height), TEXTURE_TRANSFER_FLAGS);
+    gspWaitForPPF();
+    C3D_TexSetFilter(texp, GPU_LINEAR, GPU_NEAREST);
+    delete[] raw_png;
+    linearFree(gpusrc);
+    return texp;
+}
+void GPU::destroy_texture(void *p) {
+    C3D_TexDelete((C3D_Tex*)p);
+    delete (C3D_Tex*)p;
+}
+void GPU::use_texture(void *p) {
+    C3D_TexBind(0, (C3D_Tex*)p);
 }

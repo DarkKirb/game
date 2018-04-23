@@ -118,3 +118,26 @@ Triangle VBO::get(int index) const {
 void VBO::set(int index, Triangle item) {
     tris[index] = item;
 }
+struct TEXNative {
+    TPLFile spriteTPL;
+    GXTexObj texobj;
+};
+void *GPU::load_texture(std::string tex) {
+    auto native = new TEXNative;
+    TPLFile &spriteTPL = native->spriteTPL;
+    GXTexObj &texobj = native->texobj;
+    TPL_OpenTPLFromFile(&spriteTPL, tex.c_str());
+    TPL_GetTexture(&spriteTPL, 0, &texobj);
+    return native;
+}
+
+void GPU::destroy_texture(void *p) {
+    auto native = (TEXNative *)p;
+    TPL_CloseTPLFile(&(native->spriteTPL));
+    delete native;
+}
+
+void GPU::use_texture(void *p) {
+    auto native = (TEXNative *)p;
+    GX_LoadTexObj(&(native->texobj), GX_TEXMAP0);
+}

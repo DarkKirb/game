@@ -1,6 +1,7 @@
 #pragma once
 #include <vec.hpp>
 #include <vector>
+#include <string>
 
 struct Point {
     Vec2 pos;
@@ -29,4 +30,7 @@ struct GPU {
     void endRender();
     VBO *createVBO(int tris);
     void destroyVBO(VBO *vbo);
+    void *load_texture(std::string tex);
+    void destroy_texture(void *);
+    void use_texture(void *);
 };
