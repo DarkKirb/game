@@ -20,6 +20,39 @@ struct VBO {
     Triangle get(int index) const;
     void set(int index, Triangle item);
     void *native;
+    void setQuad(int i, Vec2 tl, Vec2 br, int spriteno, int width) {
+        Vec2 spritetl{(spriteno % width)*(1.0f/width), (spriteno / width)*(1.0f/width)};
+        Vec2 spritebr = spritetl + (1.0f/width);
+        set(i, {
+                {
+                    tl,
+                    spritetl
+                },
+                {
+                    {br.x, tl.y},
+                    {spritebr.x, spritetl.y}
+                },
+                {
+                    {tl.x, br.y},
+                    {spritetl.x, spritebr.y}
+                }
+               });
+        set(i+1, {
+                    {
+                        {br.x, tl.y},
+                        {spritebr.x, spritetl.y}
+                    },
+                    {
+                        br,
+                        spritebr
+                    },
+                    {
+                        {tl.x, br.y},
+                        {spritetl.x, spritebr.y}
+                    }
+                }
+            );
+    }
 };
 
 struct GPU {

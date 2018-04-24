@@ -25,8 +25,6 @@ GXRModeObj *get_rmode() {
     return rmode;
 }
 void init(int argc, const char** argv) {
-    DEBUG_Init(GDBSTUB_DEVICE_USB, 1);
-    _break();
     VIDEO_Init();
     WPAD_Init();
     PAD_Init();

@@ -35,13 +35,14 @@ namespace {
 GPU::GPU() {
 
     C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
+    C3D_CullFace(GPU_CULL_NONE);
     target = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
     C3D_RenderTargetSetClear(target, C3D_CLEAR_ALL, 0x000000FF, 0);
     C3D_RenderTargetSetOutput(target, GFX_TOP, GFX_LEFT, (GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
                 GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
                 GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO)));
 
-    Mtx_OrthoTilt(&projection, 0.0, 400.0, 0.0, 240.0, 0.0, 1.0, false);
+    Mtx_OrthoTilt(&projection, 0.0, 400.0, 0.0, 240.0, 0.0, 1.0, true);
     C3D_TexEnv* env = C3D_GetTexEnv(0);
     C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, 0, 0);
     C3D_TexEnvOp(env, C3D_Both, 0, 0, 0);
@@ -68,7 +69,7 @@ GPU::GPU() {
 
     C3D_BufInfo *bufInfo = C3D_GetBufInfo();
     BufInfo_Init(bufInfo);
-    BufInfo_Add(bufInfo, vbo_buf, sizeof(Triangle), 1, 0);
+    BufInfo_Add(bufInfo, vbo_buf, sizeof(Point), 1, 0);
 
     memset(bitmap, 0xFF, sizeof(bitmap));
 }
@@ -90,6 +91,7 @@ void GPU::startRender() {
             vbo->changed = false;
         }
     }
+    C3D_BindProgram(&program);
     C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
     C3D_FrameDrawOn(target);
 }
@@ -203,8 +205,15 @@ void GPU::destroyVBO(VBO *vbo) {
 }
 
 void VBO::render(int from, int len) {
+    for(int i = from; i < from + len; i++) {
+        Triangle &item = tris[i];
+        std::cout << "Rendering " << i << " of VBO." << std::endl;
+        std::cout << "Point A: (" << item.a.pos.x << ", " << item.a.pos.y << "), (" << item.a.texcoords.x << ", " << item.a.texcoords.y << ")" << std::endl;
+        std::cout << "Point B: (" << item.b.pos.x << ", " << item.b.pos.y << "), (" << item.b.texcoords.x << ", " << item.b.texcoords.y << ")" << std::endl;
+        std::cout << "Point C: (" << item.c.pos.x << ", " << item.c.pos.y << "), (" << item.c.texcoords.x << ", " << item.c.texcoords.y << ")" << std::endl;
+    }
     int page = std::distance(vbo_buf, tris);
-    C3D_DrawArrays(GPU_TRIANGLES, from * 3, len * 3);
+    C3D_DrawArrays(GPU_TRIANGLES, (page+from) * 3, len * 3);
 }
 
 Triangle VBO::get(int index) const {
@@ -216,13 +225,14 @@ void VBO::set(int index, Triangle item) {
     std::cout << "Point A: (" << item.a.pos.x << ", " << item.a.pos.y << "), (" << item.a.texcoords.x << ", " << item.a.texcoords.y << ")" << std::endl;
     std::cout << "Point B: (" << item.b.pos.x << ", " << item.b.pos.y << "), (" << item.b.texcoords.x << ", " << item.b.texcoords.y << ")" << std::endl;
     std::cout << "Point C: (" << item.c.pos.x << ", " << item.c.pos.y << "), (" << item.c.texcoords.x << ", " << item.c.texcoords.y << ")" << std::endl;
-    tris[index] = item;
+    memcpy(tris + index, &item, sizeof(item));
     changed = true;
 }
 
 void *GPU::load_texture(std::string tex) {
     PNG png(tex);
     char *raw_png = new char[png.height * png.width * 4];
+    png.read_to(raw_png);
     char *gpusrc = (char *)linearAlloc(png.height * png.width * 4);
     memcpy(gpusrc, raw_png, png.height * png.width * 4);
     GSPGPU_FlushDataCache(gpusrc, png.width*png.height*4);

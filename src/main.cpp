@@ -9,36 +9,7 @@ int main(int argc, const char ** argv) {
     g = &gpu;
 
     VBO *vbo = gpu.createVBO(2);
-    vbo->set(0, {
-        {
-            { 0.0f, 1.0f },
-            { 0.0f, 1.0f }
-        },
-        {
-            { 0.0f, 0.0f },
-            { 0.0f, 0.0f }
-        },
-        {
-            { 1.0f, 0.0f },
-            { 1.0f, 0.0f }
-        }
-    });
-
-    vbo->set(1, {
-        {
-            { 1.0f, 0.0f },
-            { 1.0f, 0.0f }
-        },
-        {
-            { 1.0f, 1.0f },
-            { 1.0f, 1.0f }
-        },
-        {
-            { 0.0f, 1.0f },
-            { 0.0f, 1.0f }
-        }
-    });
-
+    vbo->setQuad(0, {0.0f, 1.0f}, {1.0f, 0.0f}, 0, 1);
     void *tex = gpu.load_texture(get_ro_data_dir() + "/imgs/gorb.png");
 
     

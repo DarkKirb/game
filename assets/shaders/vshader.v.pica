@@ -2,8 +2,11 @@
 
 ; Constants
 .constf myconst(0.0, 1.0, -1.0, 0.5)
-.constf myconst2(0.0, 0.0083333333, 0.0, -1.0)
-.constf myconst3(-0.005, 0.0, -0.36, 1.0)
+.constf dpx(0.0, 240, 0.0, 0.0)
+.constf dpy(400, 0.0, 0.0, 0.0)
+.constf dpz(0.0, 0.0, 1.0, 0.0)
+.constf dpw(0.0, 0.0, 0.0, 1.0)
+
 .alias  zeros myconst.xxxx ; Vector full of zeros
 .alias  ones  myconst.yyyy ; Vector full of ones
 
@@ -21,14 +24,15 @@
     mov r0.xy, inpos
     mov r0.z, myconst.w
     mov r0.w,   ones
-    mov r1, myconst
-    mov r2, myconst2
-    mov r3, myconst3
-    dp4 outpos.x, r0, r2
-    dp4 r3.y, r0, r3.xyyw
-    add outpos.y, r3.y, r3.z
-    dp4 outpos.z, r0, r1.xxyz
-    dp4 outpos.w, r0, r1.xxxy
+
+    mov r1, dpx
+    mov r2, dpy
+    mov r3, dpz
+    mov r4, dpw
+    dp4 outpos.x, r0, r1
+    dp4 outpos.y, r0, r2
+    dp4 outpos.z, r0, r3
+    dp4 outpos.w, r0, r4
     ; outclr = inclr
     mov outtc0, inpos.zw
 
