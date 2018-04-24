@@ -10,33 +10,43 @@
 
 #define CLEAR_COLOR 0x68B0D8FF
 #define DISPLAY_TRANSFER_FLAGS \
-	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
-	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
-GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
+    (GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
+     GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
+     GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 
 #define TEXTURE_TRANSFER_FLAGS \
-	(GX_TRANSFER_FLIP_VERT(1) | GX_TRANSFER_OUT_TILED(1) | GX_TRANSFER_RAW_COPY(0) | \
-	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGBA8) | \
-	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
+    (GX_TRANSFER_FLIP_VERT(1) | GX_TRANSFER_OUT_TILED(1) | GX_TRANSFER_RAW_COPY(0) | \
+     GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGBA8) | \
+     GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 namespace {
-constexpr int tri_max = 1024;
-static_assert(tri_max % 8 == 0, "Triangle maximum has to be a multiple of 8");
+    constexpr int tri_max = 1024;
+    static_assert(tri_max % 8 == 0, "Triangle maximum has to be a multiple of 8");
 
-uint8_t bitmap[tri_max/8];
-Triangle *vbo_buf;
-C3D_RenderTarget *target;
-uint8_t *shader;
-DVLB_s* vshader_dvlb;
-shaderProgram_s program;
-int uLoc_projection;
-C3D_Mtx projection;
+    uint8_t bitmap[tri_max/8];
+    Triangle *vbo_buf;
+    C3D_RenderTarget *target;
+    uint8_t *shader;
+    DVLB_s* vshader_dvlb;
+    shaderProgram_s program;
+    C3D_Mtx projection;
 }
 
+
 GPU::GPU() {
+
     C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
     target = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-    C3D_RenderTargetSetClear(target, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
-    C3D_RenderTargetSetOutput(target, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+    C3D_RenderTargetSetClear(target, C3D_CLEAR_ALL, 0x000000FF, 0);
+    C3D_RenderTargetSetOutput(target, GFX_TOP, GFX_LEFT, (GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
+                GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
+                GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO)));
+
+    Mtx_OrthoTilt(&projection, 0.0, 400.0, 0.0, 240.0, 0.0, 1.0, false);
+    C3D_TexEnv* env = C3D_GetTexEnv(0);
+    C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, 0, 0);
+    C3D_TexEnvOp(env, C3D_Both, 0, 0, 0);
+    C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
+    C3D_DepthTest(true, GPU_GEQUAL, GPU_WRITE_ALL);
 
     std::ifstream f("romfs:/shaders/vshader.v.pica", std::ios::ate | std::ios::binary);
     size_t size = f.tellg();
@@ -48,24 +58,17 @@ GPU::GPU() {
     shaderProgramSetVsh(&program, &vshader_dvlb->DVLE[0]);
     C3D_BindProgram(&program);
 
-    uLoc_projection = shaderInstanceGetUniformLocation(program.vertexShader, "projection");
-
     C3D_AttrInfo *attrInfo = C3D_GetAttrInfo();
     AttrInfo_Init(attrInfo);
-    AttrInfo_AddLoader(attrInfo, 0, GPU_FLOAT, 4);
+    AttrInfo_AddLoader(attrInfo, 0, GPU_FLOAT, 4); // pos
 
-    Mtx_OrthoTilt(&projection, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, true);
     vbo_buf = (Triangle*)linearAlloc(sizeof(Triangle) * tri_max);
+    memset(vbo_buf, 0, sizeof(Triangle) * tri_max);
+    GSPGPU_FlushDataCache(vbo_buf, sizeof(Triangle) * tri_max);
 
     C3D_BufInfo *bufInfo = C3D_GetBufInfo();
     BufInfo_Init(bufInfo);
-    BufInfo_Add(bufInfo, vbo_buf, sizeof(Triangle) * tri_max, 1, 0);
-
-    C3D_TexEnv *env = C3D_GetTexEnv(0);
-    C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, 0, 0);
-    C3D_TexEnvOp(env, C3D_Both, 0, 0, 0);
-    C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
-    C3D_DepthTest(true, GPU_GEQUAL, GPU_WRITE_ALL);
+    BufInfo_Add(bufInfo, vbo_buf, sizeof(Triangle), 1, 0);
 
     memset(bitmap, 0xFF, sizeof(bitmap));
 }
@@ -209,6 +212,10 @@ Triangle VBO::get(int index) const {
 }
 
 void VBO::set(int index, Triangle item) {
+    std::cout << "Setting " << index << " of VBO." << std::endl;
+    std::cout << "Point A: (" << item.a.pos.x << ", " << item.a.pos.y << "), (" << item.a.texcoords.x << ", " << item.a.texcoords.y << ")" << std::endl;
+    std::cout << "Point B: (" << item.b.pos.x << ", " << item.b.pos.y << "), (" << item.b.texcoords.x << ", " << item.b.texcoords.y << ")" << std::endl;
+    std::cout << "Point C: (" << item.c.pos.x << ", " << item.c.pos.y << "), (" << item.c.texcoords.x << ", " << item.c.texcoords.y << ")" << std::endl;
     tris[index] = item;
     changed = true;
 }

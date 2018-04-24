@@ -1,7 +1,9 @@
-.fvec projection[4]
+; Example PICA200 vertex shader
 
-.constf myconst(0.0, 1.0, -1.0, 0.1)
-.constf myconst2(0.3, 0.0, 0.0, 0.0)
+; Constants
+.constf myconst(0.0, 1.0, -1.0, 0.5)
+.constf myconst2(0.0, 0.0083333333, 0.0, -1.0)
+.constf myconst3(-0.005, 0.0, -0.36, 1.0)
 .alias  zeros myconst.xxxx ; Vector full of zeros
 .alias  ones  myconst.yyyy ; Vector full of ones
 
@@ -12,15 +14,24 @@
 ; Inputs (defined as aliases for convenience)
 .alias inpos v0
 
+.bool test
+
 .proc main
-	mov r0.xy, inpos.xy
-	mov r1.xy, inpos.zw
-	mov r0.z, zeros
-	mov r0.w, ones
-	dp4 outpos.x, projection[0], r0
-    dp4 outpos.y, projection[1], r0
-    dp4 outpos.z, projection[2], r0
-    dp4 outpos.w, projection[3], r0
-	mov outtc0, r1
+    ; Force the w component of inpos to be 1.0
+    mov r0.xy, inpos
+    mov r0.z, myconst.w
+    mov r0.w,   ones
+    mov r1, myconst
+    mov r2, myconst2
+    mov r3, myconst3
+    dp4 outpos.x, r0, r2
+    dp4 r3.y, r0, r3.xyyw
+    add outpos.y, r3.y, r3.z
+    dp4 outpos.z, r0, r1.xxyz
+    dp4 outpos.w, r0, r1.xxxy
+    ; outclr = inclr
+    mov outtc0, inpos.zw
+
+    ; We're finished
     end
 .end
